@@ -14,10 +14,25 @@ public class PlayerController : MonoBehaviour
     private bool grounded = false;
     private bool canJump;
     private Rigidbody rb;
-    void CheckGrounded()=> grounded = Physics.Raycast(new Ray(transform.position, -transform.up),out RaycastHit hit, groundedHeight,groundMask);
-   
-   
+    private RaycastHit hit;
+    private bool cantMove;
+    void CheckGrounded()=> grounded = Physics.Raycast(new Ray(transform.position, -transform.up),out hit, groundedHeight,groundMask);
 
+
+    void AlignWithGround()
+    {
+        if (grounded)
+        {
+            Vector3 groundDirection = (hit.point - transform.position).normalized;
+            Vector3 groundUp = Vector3.Dot(groundDirection, -Vector3.up) * Vector3.up;
+            transform.up = Vector3.MoveTowards(transform.up, groundUp, 1500 * Time.deltaTime);
+        }
+        else
+        {
+            transform.up = Vector3.up;
+        }
+        
+    }
     void Jump()
     {
         if (canJump && grounded)
@@ -47,6 +62,15 @@ public class PlayerController : MonoBehaviour
         }
         movementInput.z = Input.GetAxis("Vertical");
         movementInput.x = Input.GetAxis("Horizontal");
+        if (canJump && movementInput.z > 0.0 && movementInput.x > 0.0)
+        {
+            cantMove = false;
+        }
+        else
+        {
+            cantMove = true;
+        }
+        
     }
     private void Start()
     {
@@ -54,6 +78,7 @@ public class PlayerController : MonoBehaviour
     }
     private void Update()
     {
+        AlignWithGround();
         ControlPlayer();
     }
     private void FixedUpdate()
@@ -66,6 +91,9 @@ public class PlayerController : MonoBehaviour
             Move();
         }
     }
-
+    private void OnCollisionEnter(Collision collision)
+    {
+        //cantMove = !cantMove;
+    }
 
 }
